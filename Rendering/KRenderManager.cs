@@ -37,6 +37,9 @@ public static class KVertexBufferExtensions
         self.DrawBuffer(buffer, 2, ref region);
     }
 
+    //SFML removed Quads from their list of primitives, so you must draw quads with triangles.
+    //ABD represents the first half of the quad (top left, top right, bottom left), 
+    //BCD represents the other half (top right, bottom right, bottom, left). 
     public static void DrawRect(this VertexBuffer self, FloatRect rect, Color color, ref KBufferRegion region)
     {
         var buffer = ArrayPool<Vertex>.Shared.Rent(6);
@@ -76,7 +79,7 @@ public static class KVertexBufferExtensions
 
 public struct KRenderLayer
 {
-    public FloatRect Bounds;
+    public FloatRect Bounds; //Defines the bounds, that the layer will be drawn to. 
     public PrimitiveType Primitive;
     public RenderStates States;
     public KBufferRegion Region;
@@ -126,7 +129,7 @@ public class KRenderManager
 {
     private View _view;
     public RenderWindow Window;
-    public VertexBuffer VBuffer;
+    public VertexBuffer VBuffer; //Refrence to the VertexBuffer.
     public KTextHandler TextHandler;
     public KRenderLayer[] RenderLayers;
 
@@ -150,10 +153,12 @@ public class KRenderManager
     {
         for (int i = 0; i < RenderLayers.Length; i++)
         {
+            //Renders each layer
             RenderLayers[i].Clear();
             RenderLayers[i].RenderFrame(VBuffer);
             RenderLayers[i].Display();
 
+            //Draws each layer to the window.
             FloatRect rect = RenderLayers[i].Bounds;
             FloatRect texRect = new((0, 0), (Vector2f)RenderLayers[i].Texture.Size);
 
@@ -170,6 +175,7 @@ public class KRenderManager
             Window.Draw(buffer, 0, 6, PrimitiveType.Triangles, new(RenderLayers[i].Texture));
         }
 
+        //Draws text to the window.
         TextHandler.FrameUpdate(Window);
     }
 
@@ -185,6 +191,7 @@ public class KRenderManager
     public void DrawRect(FloatRect rect, FloatRect textureRect, Color color, int layer) =>
         VBuffer.DrawRect(rect, textureRect, color, ref RenderLayers[layer].Region);
 
+    //Untested, unused.
     public VertexBuffer ResizeBuffer(uint size, PrimitiveType primitive = PrimitiveType.Points)
     {
         VertexBuffer newBuffer = new(size, primitive, VertexBuffer.UsageSpecifier.Stream);
@@ -194,6 +201,7 @@ public class KRenderManager
         return VBuffer = newBuffer;
     }
 
+    //Untested, unused, should work?
     private void ResizeView(object? _, SizeEventArgs e)
     {
         _view.Size = (Vector2f)e.Size;
