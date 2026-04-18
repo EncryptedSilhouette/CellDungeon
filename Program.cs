@@ -103,6 +103,11 @@ public static class KProgram
         }
     }
 
+    public static void LoadAndInit()
+    {
+
+    }
+
     public static bool LoadAtlas(string filePath, out KTextureAtlas atlas)
     {
         var lines = File.ReadAllLines(filePath);
