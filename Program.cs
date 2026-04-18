@@ -54,13 +54,20 @@ public static class KProgram
         Window.SetFramerateLimit(60);
         Window.Closed += (_, _) => Running = false;
 
+        VertexBuffer vBuffer = new(12_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic);
+        KBufferRegion[] bufferRegions =
+        [
+            new(0, 6_000),
+            new(6_000, 6_000)
+        ];
+
+
         LoadAtlas("assets/atlas.csv", out KTextureAtlas atlas);
 
         TextureAtlas = atlas;
 
         //Single vertexBuffer for entire program, this will need constant tweaking until a better system is created.
         //This buffer is split into regions for render layers and differing primitives.
-        VertexBuffer vBuffer = new(12_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic);
 
         KRenderLayer[] renderLayers =
         [
@@ -71,22 +78,23 @@ public static class KProgram
                 Primitive = PrimitiveType.Triangles,
                 States = new RenderStates(atlas.Texture),
                 ClearColor = Color.Transparent,
-                Region = new KBufferRegion(0, 6_000), //Represents a region of the VertexBuffer
+                Region = bufferRegions[0], //Represents a region of the VertexBuffer
             },
         ];
 
         //handles text drawing.
-        KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, new(6_000, 6_000));
+        KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[1]);
 
         RenderManager = new(Window, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
         GameManager = new();
+
+        //If all succeed then allow the program to run.
+        Running = true;
     }
 
     public static void Main()
     {
-        Running = true;
-
         while (Running)
         {
             GameManager.Update();
@@ -101,11 +109,6 @@ public static class KProgram
             InputManager.Update();
             Window.DispatchEvents();
         }
-    }
-
-    public static void LoadAndInit()
-    {
-
     }
 
     public static bool LoadAtlas(string filePath, out KTextureAtlas atlas)
