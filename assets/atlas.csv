@@ -1,0 +1,15 @@
+-at,assets/atlas.png
+-sp,default,0,0,4,4
+-sp,key,4,0,4,4
+-sp,node0,8,0,4,4
+-sp,node1,12,0,4,4
+
+-sp,corner0,0,4,4,4
+-sp,wall0,4,4,4,4
+-sp,ground,8,4,4,4
+-sp,portal,12,4,4,4
+
+-sp,wall1,0,8,4,4
+-sp,corner1,4,8,4,4
+-sp,cliff,8,8,4,4
+
