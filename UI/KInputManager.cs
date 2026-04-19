@@ -7,12 +7,12 @@ using SFML.Window;
 public enum KKeyStates : byte
 {
     NONE = 0,
-    PRESSED = 1, 
+    PRESSED = 1,
     HELD = 1 << 1,
-    RELEASED = 1 << 2, 
-    SHIFT = 1 << 3, 
-    CONTROL = 1 << 4, 
-    ALT = 1 << 5, 
+    RELEASED = 1 << 2,
+    SHIFT = 1 << 3,
+    CONTROL = 1 << 4,
+    ALT = 1 << 5,
     SYSTEM = 1 << 6
 };
 
@@ -47,11 +47,11 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
         _activeKeyCount = 0;
         _activeKeys = new Keyboard.Key[Keyboard.KeyCount];
         _keyStates = new KKeyStates[Keyboard.KeyCount];
-        
+
         MouseStates = 0;
         PrevMouseStates = 0;
         Array.Fill(_keyStates, KKeyStates.NONE);
-        
+
         MousePosX = 0;
         MousePosY = 0;
         ScrollDelta = 0;
@@ -67,7 +67,19 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
         Window.KeyReleased += KeyReleased;
         Window.TextEntered += TextEntered;
         Window.LostFocus += LostFocus;
-    }   
+    }
+
+    ~KInputManager()
+    {
+        Window.MouseMoved -= MouseMoved;
+        Window.MouseButtonPressed -= MouseButtonPressed;
+        Window.MouseButtonReleased -= MouseButtonReleased;
+        Window.MouseWheelScrolled -= MouseScrolled;
+        Window.KeyPressed -= KeyPressed;
+        Window.KeyReleased -= KeyReleased;
+        Window.TextEntered -= TextEntered;
+        Window.LostFocus -= LostFocus;
+    }
 
     public void Update()
     {
@@ -96,26 +108,26 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
     public Vector2f GetMousePosition(float scale = 1) =>
         new(MousePosX * scale, MousePosY * scale);
 
-    public bool IsMousePressed(KMouseStates state) => 
+    public bool IsMousePressed(KMouseStates state) =>
         !PrevMouseStates.HasFlag(state) && MouseStates.HasFlag(state);
 
     public bool IsMouseDown(KMouseStates state) =>
         MouseStates.HasFlag(state);
 
-    public bool IsMouseReleased(KMouseStates state) => 
+    public bool IsMouseReleased(KMouseStates state) =>
         PrevMouseStates.HasFlag(state) && !MouseStates.HasFlag(state);
 
-    public bool CheckKeyState(Keyboard.Key key, KKeyStates states) => 
+    public bool CheckKeyState(Keyboard.Key key, KKeyStates states) =>
         _keyStates[(int)key].HasFlag(states);
 
     public bool IsKeyPressed(Keyboard.Key key) =>
-        _keyStates[(int) key].HasFlag(KKeyStates.PRESSED);
+        _keyStates[(int)key].HasFlag(KKeyStates.PRESSED);
 
     public bool IsKeyDown(Keyboard.Key key) =>
-        _keyStates[(int) key].HasFlag(KKeyStates.PRESSED) || 
-        _keyStates[(int) key].HasFlag(KKeyStates.HELD);
+        _keyStates[(int)key].HasFlag(KKeyStates.PRESSED) ||
+        _keyStates[(int)key].HasFlag(KKeyStates.HELD);
 
-    public bool IsKeyReleased(Keyboard.Key key) => 
+    public bool IsKeyReleased(Keyboard.Key key) =>
         _keyStates[(int)key].HasFlag(KKeyStates.RELEASED);
 
     public void StartTextRead()
@@ -133,7 +145,7 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
     {
         _readText = false;
         return StringBuilder.ToString();
-    }    
+    }
 
     private void MouseMoved(object? obj, MouseMoveEventArgs args)
     {
@@ -224,7 +236,7 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
         }
 
         ref var states = ref _keyStates[(int)args.Code];
-        
+
         states = KKeyStates.PRESSED | KKeyStates.HELD;
         if (args.Shift) states |= KKeyStates.SHIFT;
         if (args.Control) states |= KKeyStates.CONTROL;
@@ -240,7 +252,7 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
         if (_activeKeyCount < _activeKeys.Length)
         {
             _activeKeys[_activeKeyCount] = args.Code;
-            _activeKeyCount++;   
+            _activeKeyCount++;
         }
     }
 
@@ -255,7 +267,7 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
         if (!_readText) return;
         var text = args.Unicode;
 
-        switch(args.Unicode)
+        switch (args.Unicode)
         {
             case "\b":
                 break;
@@ -263,7 +275,7 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
             default:
                 StringBuilder.Append(text);
                 break;
-        } 
+        }
     }
 
     private void LostFocus(object? obj, EventArgs args)

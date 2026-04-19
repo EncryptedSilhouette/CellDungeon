@@ -27,7 +27,7 @@ public static class KProgram
     //TODO 
     //Error handling
 
-    private static string s_title;
+    private static string s_title = "dungeons";
 
     public static bool Running = false;
     public static RenderWindow Window;
@@ -46,28 +46,25 @@ public static class KProgram
         }
     }
 
-    static KProgram()
+    static KProgram() //Initialization.
     {
-        s_title = "dungeons";
-
         Window = new(VideoMode.DesktopMode, Title);
-        Window.SetFramerateLimit(60);
         Window.Closed += (_, _) => Running = false;
+        Window.SetFramerateLimit(60);
 
+        //Single vertexBuffer for entire program.
+        //This will need constant tweaking until a better system is created.
         VertexBuffer vBuffer = new(12_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic);
+        //This buffer is split into regions for render layers and differing primitives.
         KBufferRegion[] bufferRegions =
         [
-            new(0, 6_000),
+            new(0, 6_000),      //Each region represents a range of verticies within the VertexBuffer.
             new(6_000, 6_000)
         ];
 
-
+        //Load default atlas.
         LoadAtlas("assets/atlas.csv", out KTextureAtlas atlas);
-
         TextureAtlas = atlas;
-
-        //Single vertexBuffer for entire program, this will need constant tweaking until a better system is created.
-        //This buffer is split into regions for render layers and differing primitives.
 
         KRenderLayer[] renderLayers =
         [
@@ -78,13 +75,14 @@ public static class KProgram
                 Primitive = PrimitiveType.Triangles,
                 States = new RenderStates(atlas.Texture),
                 ClearColor = Color.Transparent,
-                Region = bufferRegions[0], //Represents a region of the VertexBuffer
+                Region = bufferRegions[0],  //Assigns a region of the vertex buffer to this layer.
             },
         ];
 
         //handles text drawing.
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[1]);
 
+        //Initializes systems.
         RenderManager = new(Window, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
         GameManager = new();

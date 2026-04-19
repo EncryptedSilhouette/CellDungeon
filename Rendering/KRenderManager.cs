@@ -37,7 +37,7 @@ public static class KVertexBufferExtensions
         self.DrawBuffer(buffer, 2, ref region);
     }
 
-    //SFML removed Quads from their list of primitives, so you must draw quads with triangles.
+    //SFML 3.0 removed Quads from their PrimitiveType enum, so you must draw quads with triangles.
     //ABD represents the first half of the quad (top left, top right, bottom left), 
     //BCD represents the other half (top right, bottom right, bottom, left). 
     public static void DrawRect(this VertexBuffer self, FloatRect rect, Color color, ref KBufferRegion region)
@@ -77,6 +77,13 @@ public static class KVertexBufferExtensions
     }
 }
 
+public struct KSprite
+{
+    public Color Color;
+    public FloatRect bounds;
+    public FloatRect texRect;
+}
+
 public struct KRenderLayer
 {
     public FloatRect Bounds; //Defines the bounds, that the layer will be drawn to. 
@@ -107,17 +114,19 @@ public struct KRenderLayer
 
     public void Display() => RenderTexture.Display();
 
-    public void DrawBuffer(VertexBuffer vBuffer, Vertex[] vertices, uint vCount) =>
-        vBuffer.DrawBuffer(vertices, vCount, ref Region);
+    //Maybe overengineering?? I don't think there will be a case to draw to a layer directly,
+    //unless used outside of the RenderManager type.
+    // public void DrawBuffer(VertexBuffer vBuffer, Vertex[] vertices, uint vCount) =>
+    //     vBuffer.DrawBuffer(vertices, vCount, ref Region);
 
-    public void DrawLine(VertexBuffer vBuffer, Vector2f a, Vector2f b, Color color) =>
-        vBuffer.DrawLine(a, b, color, ref Region);
+    // public void DrawLine(VertexBuffer vBuffer, Vector2f a, Vector2f b, Color color) =>
+    //     vBuffer.DrawLine(a, b, color, ref Region);
 
-    public void DrawRect(VertexBuffer vBuffer, FloatRect rect, Color color) =>
-        vBuffer.DrawRect(rect, color, ref Region);
+    // public void DrawRect(VertexBuffer vBuffer, FloatRect rect, Color color) =>
+    //     vBuffer.DrawRect(rect, color, ref Region);
 
-    public void DrawRect(VertexBuffer vBuffer, FloatRect rect, FloatRect textureRect, Color color) =>
-        vBuffer.DrawRect(rect, textureRect, color, ref Region);
+    // public void DrawRect(VertexBuffer vBuffer, FloatRect rect, FloatRect textureRect, Color color) =>
+    //     vBuffer.DrawRect(rect, textureRect, color, ref Region);
 
     public Vector2f GetScaleRelativeTo(Vector2f otherSize) =>
         new(otherSize.X / Bounds.Size.X, otherSize.Y / Bounds.Size.Y);
@@ -190,6 +199,9 @@ public class KRenderManager
 
     public void DrawRect(FloatRect rect, FloatRect textureRect, Color color, int layer) =>
         VBuffer.DrawRect(rect, textureRect, color, ref RenderLayers[layer].Region);
+
+    public void DrawSprite(KSprite sprite, int layer) =>
+        VBuffer.DrawRect(sprite.bounds, sprite.texRect, sprite.Color, ref RenderLayers[layer].Region);
 
     //Untested, unused.
     public VertexBuffer ResizeBuffer(uint size, PrimitiveType primitive = PrimitiveType.Points)
