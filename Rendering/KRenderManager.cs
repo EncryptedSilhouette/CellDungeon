@@ -80,22 +80,34 @@ public static class KVertexBufferExtensions
 public struct KSprite
 {
     public Color Color;
-    public FloatRect bounds;
-    public FloatRect texRect;
+    public FloatRect Bounds;
+    public FloatRect TRect;
 }
 
 public struct KRenderLayer
 {
+    private View _view;
+
+    public bool IsStatic;
     public FloatRect Bounds; //Defines the bounds, that the layer will be drawn to. 
     public PrimitiveType Primitive;
     public RenderStates States;
     public KBufferRegion Region;
     public RenderTexture RenderTexture;
     public Color ClearColor;
+
     public Texture Texture => RenderTexture.Texture;
+    public View View
+    {
+        get => _view;
+        set => RenderTexture.SetView(_view = value);
+    }
 
     public KRenderLayer(RenderTexture renderTexture, PrimitiveType primitive, KBufferRegion region)
     {
+        _view = renderTexture.DefaultView;
+
+        IsStatic = false;
         RenderTexture = renderTexture;
         Bounds = new((0, 0), (Vector2f)renderTexture.Size);
         Primitive = primitive;
@@ -110,6 +122,7 @@ public struct KRenderLayer
     {
         if (buffer.PrimitiveType != Primitive) buffer.PrimitiveType = Primitive;
         buffer.Draw(RenderTexture, ref Region, States);
+        if (!IsStatic) Region.Count = 0;
     }
 
     public void Display() => RenderTexture.Display();
@@ -201,7 +214,13 @@ public class KRenderManager
         VBuffer.DrawRect(rect, textureRect, color, ref RenderLayers[layer].Region);
 
     public void DrawSprite(KSprite sprite, int layer) =>
-        VBuffer.DrawRect(sprite.bounds, sprite.texRect, sprite.Color, ref RenderLayers[layer].Region);
+        VBuffer.DrawRect(sprite.Bounds, sprite.TRect, sprite.Color, ref RenderLayers[layer].Region);
+
+    public Vector2i MapCoordsToPixel(Vector2f point, int layer) =>
+        Window.MapCoordsToPixel(point, RenderLayers[layer].View);
+
+    public Vector2f MapPixelToCoords(Vector2i point, int layer) =>
+        Window.MapPixelToCoords(point, RenderLayers[layer].View);
 
     //Untested, unused.
     public VertexBuffer ResizeBuffer(uint size, PrimitiveType primitive = PrimitiveType.Points)

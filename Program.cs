@@ -54,12 +54,13 @@ public static class KProgram
 
         //Single vertexBuffer for entire program.
         //This will need constant tweaking until a better system is created.
-        VertexBuffer vBuffer = new(12_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic);
+        VertexBuffer vBuffer = new(18_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic);
         //This buffer is split into regions for render layers and differing primitives.
         KBufferRegion[] bufferRegions =
         [
             new(0, 6_000),      //Each region represents a range of verticies within the VertexBuffer.
-            new(6_000, 6_000)
+            new(6_000, 6_000),
+            new(12_000, 6_000),
         ];
 
         //Load default atlas.
@@ -70,22 +71,31 @@ public static class KProgram
         [
             new()
             {
-                RenderTexture = new(Window.Size / 8),
+                RenderTexture = new(Window.Size / 16),
                 Bounds = new FloatRect((0,0), (Vector2f)Window.Size),
                 Primitive = PrimitiveType.Triangles,
                 States = new RenderStates(atlas.Texture),
                 ClearColor = Color.Transparent,
                 Region = bufferRegions[0],  //Assigns a region of the vertex buffer to this layer.
             },
+            new()
+            {
+                RenderTexture = new(Window.Size),
+                Bounds = new FloatRect((0,0), (Vector2f)Window.Size),
+                Primitive = PrimitiveType.Lines,
+                States = RenderStates.Default,
+                ClearColor = Color.Transparent,
+                Region = bufferRegions[1],  //Assigns a region of the vertex buffer to this layer.
+            },
         ];
 
         //handles text drawing.
-        KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[1]);
+        KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
 
         //Initializes systems.
         RenderManager = new(Window, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
-        GameManager = new();
+        GameManager = new(InputManager);
 
         //If all succeed then allow the program to run.
         Running = true;

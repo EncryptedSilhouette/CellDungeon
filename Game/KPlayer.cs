@@ -1,14 +1,21 @@
+using SFML.Graphics;
 using SFML.System;
 
 public class KPlayer
 {
-    public string spriteID = "player";
     public float speed = 2;
     public Vector2f Position;
+    public KSprite Sprite;
 
     public KPlayer()
     {
-
+        Sprite = new KSprite
+        {
+            Color = Color.Blue,
+            Bounds = new(Position, (2, 2)),
+            //Replace with refrence.
+            TRect = KProgram.TextureAtlas.Sprites["node0"],
+        };
     }
 
     public void Update(KInputManager input)
@@ -30,6 +37,8 @@ public class KPlayer
 
     public void FrameUpdate(KRenderManager renderer)
     {
-        //renderer.DrawRect();
+        Sprite.Bounds.Position = Position - Sprite.Bounds.Size / 2;
+
+        renderer.DrawSprite(Sprite, 0);
     }
 }
