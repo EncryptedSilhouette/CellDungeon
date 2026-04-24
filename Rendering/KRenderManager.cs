@@ -84,6 +84,8 @@ public struct KSprite
     public FloatRect TRect;
 }
 
+//Maybe should be a class as it's really only ever passed by refrence.
+//Additonally there is a strong case for extension.
 public struct KRenderLayer
 {
     private View _view;
@@ -169,6 +171,8 @@ public class KRenderManager
         VBuffer = vBuffer;
         RenderLayers = renderLayers;
         TextHandler = textHandler;
+
+        window.Resized += ResizeView;
     }
 
     public void FrameUpdate()
@@ -215,6 +219,36 @@ public class KRenderManager
 
     public void DrawSprite(KSprite sprite, int layer) =>
         VBuffer.DrawRect(sprite.Bounds, sprite.TRect, sprite.Color, ref RenderLayers[layer].Region);
+
+    public void DrawGridOverlay(Vector2f cellSize, float scale, Color color)
+    {
+        float sizeX = cellSize.X * scale;
+        float sizeY = cellSize.Y * scale;
+        //Calcualtes amount of rows and colums to fill screen.
+        int cols = (int)(Window.Size.X / sizeX) + 1;
+        int rows = (int)(Window.Size.Y / sizeY) + 1;
+        int vCount = (cols + rows) * 2;
+
+        var buff = ArrayPool<Vertex>.Shared.Rent(vCount);
+
+        for (int i = 0; i < cols; i++)
+        {
+            buff[i * 2] = new((i * sizeX, 0), color);
+            buff[i * 2 + 1] = new((i * sizeX, Window.Size.Y), color);
+        }
+
+        var offset = cols * 2;
+
+        for (int i = 0; i < rows; i++)
+        {
+            buff[offset + i * 2] = new((0, i * sizeY), color);
+            buff[offset + i * 2 + 1] = new((Window.Size.X, i * sizeY), color);
+        }
+
+        DrawBuffer(buff, (uint)vCount, 1);
+
+        ArrayPool<Vertex>.Shared.Return(buff);
+    }
 
     public Vector2i MapCoordsToPixel(Vector2f point, int layer) =>
         Window.MapCoordsToPixel(point, RenderLayers[layer].View);

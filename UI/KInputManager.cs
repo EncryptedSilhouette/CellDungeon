@@ -69,18 +69,6 @@ public class KInputManager //Sanitizes inputs, reduces boilerplate, & reduces de
         Window.LostFocus += LostFocus;
     }
 
-    ~KInputManager()
-    {
-        Window.MouseMoved -= MouseMoved;
-        Window.MouseButtonPressed -= MouseButtonPressed;
-        Window.MouseButtonReleased -= MouseButtonReleased;
-        Window.MouseWheelScrolled -= MouseScrolled;
-        Window.KeyPressed -= KeyPressed;
-        Window.KeyReleased -= KeyReleased;
-        Window.TextEntered -= TextEntered;
-        Window.LostFocus -= LostFocus;
-    }
-
     public void Update()
     {
         PrevMouseStates = MouseStates;
