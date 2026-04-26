@@ -48,7 +48,9 @@ public static class KProgram
 
     static KProgram() //Initialization.
     {
-        Window = new(VideoMode.DesktopMode, Title);
+        VideoMode videoMode = VideoMode.DesktopMode;
+
+        Window = new(videoMode, Title);
         Window.Closed += (_, _) => Running = false;
         Window.SetFramerateLimit(60);
 
@@ -71,8 +73,8 @@ public static class KProgram
         [
             new()
             {
-                RenderTexture = new(Window.Size / 16),
-                Bounds = new FloatRect((0,0), (Vector2f)Window.Size),
+                RenderTexture = new(videoMode.Size / 16),
+                Bounds = new FloatRect((0,0), (Vector2f)videoMode.Size),
                 Primitive = PrimitiveType.Triangles,
                 States = new RenderStates(atlas.Texture),
                 ClearColor = Color.Transparent,
@@ -80,14 +82,19 @@ public static class KProgram
             },
             new()
             {
-                RenderTexture = new(Window.Size),
-                Bounds = new FloatRect((0,0), (Vector2f)Window.Size),
+                RenderTexture = new(videoMode.Size),
+                Bounds = new FloatRect((0,0), (Vector2f)videoMode.Size),
                 Primitive = PrimitiveType.Lines,
                 States = RenderStates.Default,
                 ClearColor = Color.Transparent,
                 Region = bufferRegions[1],  //Assigns a region of the vertex buffer to this layer.
             },
         ];
+
+        foreach (var item in renderLayers)
+        {
+            Console.WriteLine(item.RenderTexture.Size);
+        }
 
         //handles text drawing.
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
@@ -103,9 +110,11 @@ public static class KProgram
 
     public static void Main()
     {
+        ulong currentFrame = 0;
+
         while (Running)
         {
-            GameManager.Update();
+            GameManager.Update(currentFrame);
 
             Window.Clear();
 
@@ -116,6 +125,8 @@ public static class KProgram
 
             InputManager.Update();
             Window.DispatchEvents();
+
+            currentFrame++;
         }
     }
 

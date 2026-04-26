@@ -220,32 +220,33 @@ public class KRenderManager
     public void DrawSprite(KSprite sprite, int layer) =>
         VBuffer.DrawRect(sprite.Bounds, sprite.TRect, sprite.Color, ref RenderLayers[layer].Region);
 
-    public void DrawGridOverlay(Vector2f cellSize, float scale, Color color)
+    public void DrawGridOverlay(Vector2f cellSize, Color color, int layer)
     {
-        float sizeX = cellSize.X * scale;
-        float sizeY = cellSize.Y * scale;
+        var scale = RenderLayers[layer].RenderTexture.Size.X / (float)Window.Size.X;
+        cellSize *= scale;
+        
         //Calcualtes amount of rows and colums to fill screen.
-        int cols = (int)(Window.Size.X / sizeX) + 1;
-        int rows = (int)(Window.Size.Y / sizeY) + 1;
+        int cols = (int)(Window.Size.X / cellSize.X) + 1;
+        int rows = (int)(Window.Size.Y / cellSize.Y) + 1;
         int vCount = (cols + rows) * 2;
 
         var buff = ArrayPool<Vertex>.Shared.Rent(vCount);
 
         for (int i = 0; i < cols; i++)
         {
-            buff[i * 2] = new((i * sizeX, 0), color);
-            buff[i * 2 + 1] = new((i * sizeX, Window.Size.Y), color);
+            buff[i * 2] = new((i * cellSize.X, 0), color);
+            buff[i * 2 + 1] = new((i * cellSize.X, Window.Size.Y), color);
         }
 
         var offset = cols * 2;
 
         for (int i = 0; i < rows; i++)
         {
-            buff[offset + i * 2] = new((0, i * sizeY), color);
-            buff[offset + i * 2 + 1] = new((Window.Size.X, i * sizeY), color);
+            buff[offset + i * 2] = new((0, i * cellSize.Y), color);
+            buff[offset + i * 2 + 1] = new((Window.Size.X, i * cellSize.Y), color);
         }
 
-        DrawBuffer(buff, (uint)vCount, 1);
+        DrawBuffer(buff, (uint)vCount, layer);
 
         ArrayPool<Vertex>.Shared.Return(buff);
     }
