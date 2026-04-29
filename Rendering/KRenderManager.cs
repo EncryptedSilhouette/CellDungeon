@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics.Contracts;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -91,6 +92,7 @@ public class KRenderLayer
     private View _view;
 
     public bool IsStatic;
+    public float scale;
     public FloatRect Bounds; //Defines the bounds, that the layer will be drawn to. 
     public PrimitiveType Primitive;
     public RenderStates States;
@@ -99,6 +101,11 @@ public class KRenderLayer
     public Color ClearColor;
 
     public Texture Texture => RenderTexture.Texture;
+    
+    public Vector2f Resolution => Bounds.Size * scale;
+
+    public FloatRect ScreenCoords => new(Bounds.Position, Bounds.Size * scale); 
+
     public View View
     {
         get => _view;
