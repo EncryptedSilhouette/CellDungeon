@@ -3,7 +3,6 @@ using SFML.System;
 
 public class KPlayer
 {
-    public float speed = 1;
     public Vector2f Position;
     public KSprite Sprite;
 
@@ -13,7 +12,7 @@ public class KPlayer
         Sprite = new KSprite
         {
             Color = Color.Blue,
-            Bounds = new(Position, (2, 2)),
+            Bounds = new(Position, (4, 4)),
             //Replace with refrence.
             TRect = KProgram.TextureAtlas.Sprites["node0"],
         };
@@ -21,8 +20,6 @@ public class KPlayer
 
     public void Update(KInputManager input, ulong currentFrame)
     {
-        if (currentFrame % 10 != 0) return;
-
         Vector2f direction = new(0, 0);
 
         //X axis.
@@ -34,7 +31,7 @@ public class KPlayer
         Position += direction;
     }
 
-    public void FrameUpdate(KRenderManager renderer)
+    public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
     {
         Sprite.Bounds.Position = Position;
 

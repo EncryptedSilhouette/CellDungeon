@@ -86,7 +86,7 @@ public struct KSprite
 
 //Maybe should be a class as it's really only ever passed by refrence.
 //Additonally there is a strong case for extension.
-public struct KRenderLayer
+public class KRenderLayer
 {
     private View _view;
 
@@ -118,6 +118,11 @@ public struct KRenderLayer
         ClearColor = Color.Transparent;
     }
 
+    public void Init(Window window)
+    {
+        window.Resized += ResizeView;
+    }
+
     public void Clear() => RenderTexture.Clear(ClearColor);
 
     public void RenderFrame(VertexBuffer buffer)
@@ -147,6 +152,13 @@ public struct KRenderLayer
         new(otherSize.X / Bounds.Size.X, otherSize.Y / Bounds.Size.Y);
     public float GetScaleXRelativeTo(float width) => width / Bounds.Size.X;
     public float GetScaleYRelativeTo(float height) => height / Bounds.Size.Y;
+
+    private void ResizeView(object? _, SizeEventArgs e)
+    {
+        _view.Size = (Vector2f)e.Size;
+        _view.Center = _view.Size / 2;
+        RenderTexture.SetView(_view);
+    }
 }
 
 public class KRenderManager
@@ -224,7 +236,7 @@ public class KRenderManager
     {
         var scale = RenderLayers[layer].RenderTexture.Size.X / (float)Window.Size.X;
         cellSize *= scale;
-        
+
         //Calcualtes amount of rows and colums to fill screen.
         int cols = (int)(Window.Size.X / cellSize.X) + 1;
         int rows = (int)(Window.Size.Y / cellSize.Y) + 1;

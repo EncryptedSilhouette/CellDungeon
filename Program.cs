@@ -15,6 +15,12 @@ public struct KTextureAtlas
     public Dictionary<string, FloatRect> Sprites;
 }
 
+//PURE MADNESS.
+public static class KWindowExtensions
+{
+    public static float GetAspect(this Window self) => (float)self.Size.Y / self.Size.X;
+}
+
 //This class acts as the foundation for the rest of the program.
 //It contains the Main method, and initializes many systems for the application.
 //This class stands at the top of the program's heirarchy, 
@@ -49,7 +55,6 @@ public static class KProgram
     static KProgram() //Initialization.
     {
         VideoMode videoMode = VideoMode.DesktopMode;
-
         Window = new(videoMode, Title);
         Window.Closed += (_, _) => Running = false;
         Window.SetFramerateLimit(60);
@@ -69,32 +74,33 @@ public static class KProgram
         LoadAtlas("assets/atlas.csv", out KTextureAtlas atlas);
         TextureAtlas = atlas;
 
+        KRenderLayer WorldLayer = new(
+            new RenderTexture(videoMode.Size / 8),
+            PrimitiveType.Triangles,
+            bufferRegions[0])
+        {
+            Bounds = new FloatRect((0, 0), (Vector2f)videoMode.Size),
+            States = new RenderStates(atlas.Texture),
+            ClearColor = Color.Transparent,
+        };
+        //WorldLayer.Init(Window);
+
+        KRenderLayer lineLayer = new(
+            new(videoMode.Size),
+            PrimitiveType.Lines,
+            bufferRegions[1])
+        {
+            Bounds = new FloatRect((0, 0), (Vector2f)videoMode.Size),
+            States = RenderStates.Default,
+            ClearColor = Color.Transparent,
+        };
+        //lineLayer.Init(Window);
+
         KRenderLayer[] renderLayers =
         [
-            new()
-            {
-                RenderTexture = new(videoMode.Size / 16),
-                Bounds = new FloatRect((0,0), (Vector2f)videoMode.Size),
-                Primitive = PrimitiveType.Triangles,
-                States = new RenderStates(atlas.Texture),
-                ClearColor = Color.Transparent,
-                Region = bufferRegions[0],  //Assigns a region of the vertex buffer to this layer.
-            },
-            new()
-            {
-                RenderTexture = new(videoMode.Size),
-                Bounds = new FloatRect((0,0), (Vector2f)videoMode.Size),
-                Primitive = PrimitiveType.Lines,
-                States = RenderStates.Default,
-                ClearColor = Color.Transparent,
-                Region = bufferRegions[1],  //Assigns a region of the vertex buffer to this layer.
-            },
+            WorldLayer,
+            lineLayer
         ];
-
-        foreach (var item in renderLayers)
-        {
-            Console.WriteLine(item.RenderTexture.Size);
-        }
 
         //handles text drawing.
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
@@ -118,7 +124,7 @@ public static class KProgram
 
             Window.Clear();
 
-            GameManager.FrameUpdate(RenderManager);
+            GameManager.FrameUpdate(RenderManager, currentFrame);
             RenderManager.FrameUpdate();
 
             Window.Display();

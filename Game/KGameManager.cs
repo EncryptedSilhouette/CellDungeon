@@ -25,9 +25,9 @@ public class KGameManager
         Player.Update(InputManager, currentFrame);
     }
 
-    public void FrameUpdate(KRenderManager renderer)
+    public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
     {
-        Player.FrameUpdate(renderer);
+        Player.FrameUpdate(renderer, currentFrame);
         renderer.DrawGridOverlay((32, 32), Color.White, 1);
     }
 }
