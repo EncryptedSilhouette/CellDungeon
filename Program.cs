@@ -21,6 +21,14 @@ public static class KWindowExtensions
     public static float GetAspect(this Window self) => (float)self.Size.Y / self.Size.X;
 }
 
+public struct KResolution
+{
+    public float scale;
+    public Vector2f AspectRatio;
+
+    //Vector2f Resolution =>
+}
+
 //This class acts as the foundation for the rest of the program.
 //It contains the Main method, and initializes many systems for the application.
 //This class stands at the top of the program's heirarchy, 
@@ -34,7 +42,6 @@ public static class KProgram
     //Error handling
 
     private static string s_title = "dungeons";
-
     public static bool Running = false;
     public static RenderWindow Window;
     public static KRenderManager RenderManager;
@@ -74,25 +81,24 @@ public static class KProgram
         LoadAtlas("assets/atlas.csv", out KTextureAtlas atlas);
         TextureAtlas = atlas;
 
+        #region Render Layers
+
         KRenderLayer WorldLayer = new(
-            new RenderTexture(videoMode.Size / 8),
+            new RenderTexture((640, 360)),
             PrimitiveType.Triangles,
             bufferRegions[0])
         {
-            Bounds = new FloatRect((0, 0), (Vector2f)videoMode.Size),
+            Scale = 1,
+            Position = (0, 0),
             States = new RenderStates(atlas.Texture),
-            ClearColor = Color.Transparent,
         };
-        //WorldLayer.Init(Window);
 
         KRenderLayer lineLayer = new(
-            new(videoMode.Size),
+            new(VideoMode.DesktopMode.Size),
             PrimitiveType.Lines,
             bufferRegions[1])
         {
-            Bounds = new FloatRect((0, 0), (Vector2f)videoMode.Size),
-            States = RenderStates.Default,
-            ClearColor = Color.Transparent,
+            Position = (0, 0),
         };
         //lineLayer.Init(Window);
 
@@ -101,6 +107,8 @@ public static class KProgram
             WorldLayer,
             lineLayer
         ];
+
+        #endregion
 
         //handles text drawing.
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
@@ -136,6 +144,7 @@ public static class KProgram
         }
     }
 
+    //Needs reworking.
     public static bool LoadAtlas(string filePath, out KTextureAtlas atlas)
     {
         var lines = File.ReadAllLines(filePath);
@@ -176,5 +185,26 @@ public static class KProgram
             }
         }
         return atlas.Texture is null ? false : true;
+    }
+
+    //Resoution shit.
+    public static int GreatestCommonFactor(int x, int y)
+    {
+        var smaller = Math.Min(x, y);
+        var factor = 1;
+
+        for (int i = 2; i <= smaller; i++)
+        {
+            if ((x % i == 0) && (y % i == 0)) factor = i;
+        }
+
+        return factor;
+    }
+    public static int GreatestCommonFactor(Vector2i values) =>
+        GreatestCommonFactor(values.X, values.Y);
+
+    public static float GetResolutionScale(Vector2i res)
+    {
+        return res.Y / 1080.0f * 120.0f;
     }
 }

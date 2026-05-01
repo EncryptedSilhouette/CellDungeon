@@ -8,7 +8,7 @@ public class KPlayer
 
     public KPlayer()
     {
-        Position = (1, 1);
+        Position = (0, 0);
         Sprite = new KSprite
         {
             Color = Color.Blue,

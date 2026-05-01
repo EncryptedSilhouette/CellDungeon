@@ -1,5 +1,4 @@
 using System.Buffers;
-using System.Diagnostics.Contracts;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -92,8 +91,8 @@ public class KRenderLayer
     private View _view;
 
     public bool IsStatic;
-    public float scale;
-    public FloatRect Bounds; //Defines the bounds, that the layer will be drawn to. 
+    public float Scale;
+    public Vector2f Position;
     public PrimitiveType Primitive;
     public RenderStates States;
     public KBufferRegion Region;
@@ -101,10 +100,7 @@ public class KRenderLayer
     public Color ClearColor;
 
     public Texture Texture => RenderTexture.Texture;
-    
-    public Vector2f Resolution => Bounds.Size * scale;
-
-    public FloatRect ScreenCoords => new(Bounds.Position, Bounds.Size * scale); 
+    public FloatRect Bounds => new(Position, (Vector2f)Texture.Size * Scale);
 
     public View View
     {
@@ -114,20 +110,16 @@ public class KRenderLayer
 
     public KRenderLayer(RenderTexture renderTexture, PrimitiveType primitive, KBufferRegion region)
     {
-        _view = renderTexture.DefaultView;
-
-        IsStatic = false;
         RenderTexture = renderTexture;
-        Bounds = new((0, 0), (Vector2f)renderTexture.Size);
         Primitive = primitive;
-        States = RenderStates.Default;
         Region = region;
-        ClearColor = Color.Transparent;
-    }
 
-    public void Init(Window window)
-    {
-        window.Resized += ResizeView;
+        _view = renderTexture.DefaultView;
+        IsStatic = false;
+        Scale = 1;
+        Position = (0, 0);
+        States = RenderStates.Default;
+        ClearColor = Color.Transparent;
     }
 
     public void Clear() => RenderTexture.Clear(ClearColor);
@@ -155,17 +147,10 @@ public class KRenderLayer
     // public void DrawRect(VertexBuffer vBuffer, FloatRect rect, FloatRect textureRect, Color color) =>
     //     vBuffer.DrawRect(rect, textureRect, color, ref Region);
 
-    public Vector2f GetScaleRelativeTo(Vector2f otherSize) =>
-        new(otherSize.X / Bounds.Size.X, otherSize.Y / Bounds.Size.Y);
-    public float GetScaleXRelativeTo(float width) => width / Bounds.Size.X;
-    public float GetScaleYRelativeTo(float height) => height / Bounds.Size.Y;
-
-    private void ResizeView(object? _, SizeEventArgs e)
-    {
-        _view.Size = (Vector2f)e.Size;
-        _view.Center = _view.Size / 2;
-        RenderTexture.SetView(_view);
-    }
+    // public Vector2f GetScaleRelativeTo(Vector2f otherSize) =>
+    //     new(otherSize.X / Bounds.Size.X, otherSize.Y / Bounds.Size.Y);
+    // public float GetScaleXRelativeTo(float width) => width / Bounds.Size.X;
+    // public float GetScaleYRelativeTo(float height) => height / Bounds.Size.Y;
 }
 
 public class KRenderManager
@@ -196,6 +181,7 @@ public class KRenderManager
 
     public void FrameUpdate()
     {
+
         for (int i = 0; i < RenderLayers.Length; i++)
         {
             //Renders each layer
@@ -218,6 +204,8 @@ public class KRenderManager
             buffer[5] = buffer[2];
 
             Window.Draw(buffer, 0, 6, PrimitiveType.Triangles, new(RenderLayers[i].Texture));
+
+            ArrayPool<Vertex>.Shared.Return(buffer);
         }
 
         //Draws text to the window.
@@ -229,6 +217,28 @@ public class KRenderManager
 
     public void DrawLine(Vector2f a, Vector2f b, Color color, int layer) =>
         VBuffer.DrawLine(a, b, color, ref RenderLayers[layer].Region);
+
+    public void DrawRectOutline(FloatRect rect, Color color, int layer)
+    {
+        var buffer = ArrayPool<Vertex>.Shared.Rent(8);
+
+        //AB
+        buffer[0] = new(rect.Position, color);
+        buffer[1] = new((rect.Left + rect.Width, rect.Top), color);
+        //BC
+        buffer[2] = buffer[1];
+        buffer[3] = new((rect.Left + rect.Width, rect.Top + rect.Height), color);
+        //CD
+        buffer[4] = buffer[3];
+        buffer[5] = new((rect.Left, rect.Top + rect.Height), color);
+        //DA
+        buffer[6] = buffer[5];
+        buffer[7] = buffer[0];
+
+        DrawBuffer(buffer, 8, layer);
+
+        ArrayPool<Vertex>.Shared.Return(buffer);
+    }
 
     public void DrawRect(FloatRect rect, Color color, int layer) =>
         VBuffer.DrawRect(rect, color, ref RenderLayers[layer].Region);

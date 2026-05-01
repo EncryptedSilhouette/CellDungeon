@@ -1,4 +1,3 @@
-using SFML.Graphics;
 using SFML.System;
 
 public class KGameManager
@@ -28,6 +27,5 @@ public class KGameManager
     public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
     {
         Player.FrameUpdate(renderer, currentFrame);
-        renderer.DrawGridOverlay((32, 32), Color.White, 1);
     }
 }
