@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Security.Cryptography.X509Certificates;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -77,6 +78,105 @@ public static class KVertexBufferExtensions
     }
 }
 
+
+public enum KCanvasAnchor
+{
+    TOP_LEFT,       TOP,          TOP_RIGHT,
+    LEFT,           CENTER,         RIGHT,
+    BOTTOM_LEFT,    BOTTOM,    BOTTOM_RIGHT
+}
+
+public struct KResolution
+{
+    public static float GetResolutionScale(Vector2i res) =>
+        res.Y / 1080.0f * 120.0f;
+
+    public float Scale;
+    public Vector2f AspectRatio;
+    public Vector2f Dimentions => AspectRatio * Scale;
+
+    public KResolution(Vector2i resolution)
+    {
+        Scale = GetResolutionScale(resolution);
+        AspectRatio = (Vector2f)resolution / KProgram.GreatestCommonFactor(resolution);
+    }
+}
+
+public struct KCanvas
+{
+    public Vector2f Position;
+    public Vector2f Scale;
+    public KCanvasAnchor CanvasAnchor;
+
+    public Vector2f GetCenterPosition(Vector2f resolution) => new Vector2f
+    {
+        X = resolution.X / 2 - Scale.X / 2 * resolution.X,
+        Y = resolution.Y / 2 - Scale.Y / 2 * resolution.Y,
+    };
+
+    public Vector2f GetScreenPosition(Vector2f resolution) => CanvasAnchor switch
+    {
+        //Top
+        KCanvasAnchor.TOP_LEFT => new Vector2f
+        {
+            X = Position.X * resolution.X,
+            Y = Position.Y * resolution.Y,
+        },
+        KCanvasAnchor.TOP => new Vector2f
+        {
+            X = resolution.X / 2 + Scale.X / 2 * resolution.X,
+            Y = Position.Y * resolution.Y,
+        },
+        KCanvasAnchor.TOP_RIGHT => new Vector2f
+        {
+            X = resolution.X - (Position.X - Scale.X) * resolution.X,
+            Y = Position.Y * resolution.Y,
+        },
+        //Middle
+        KCanvasAnchor.LEFT => new Vector2f
+        {
+            X = Position.X * resolution.X,
+            Y = resolution.Y / 2 + Scale.Y / 2 * resolution.Y,
+        },
+        KCanvasAnchor.CENTER => GetCenterPosition(resolution),
+        KCanvasAnchor.RIGHT => new Vector2f
+        {
+            X = resolution.X - (Position.X - Scale.X) * resolution.X,
+            Y = resolution.Y / 2 + Scale.Y / 2 * resolution.Y,
+        },
+        //Bottom
+        KCanvasAnchor.BOTTOM_LEFT => new Vector2f
+        {
+            X = Position.X * resolution.X,
+            Y = resolution.Y - (Position.Y - Scale.Y) * resolution.Y,
+        },
+        KCanvasAnchor.BOTTOM => new Vector2f
+        {
+            X = resolution.X / 2 + Scale.X / 2 * resolution.X,
+            Y = resolution.Y - (Position.Y - Scale.Y) * resolution.Y,
+        },
+        KCanvasAnchor.BOTTOM_RIGHT => new Vector2f
+        {
+            X = resolution.X - (Position.X - Scale.X) * resolution.X,
+            Y = resolution.Y - (Position.Y - Scale.Y) * resolution.Y,
+        },
+        //Default
+        _ => new Vector2f(0,0)
+    };
+
+    public Vector2f GetScreenSize(Vector2f resolution) => new Vector2f
+    {
+        X = Scale.X * resolution.X,
+        Y = Scale.Y * resolution.Y,
+    };
+
+    public FloatRect GetScreenBounds(Vector2f resolution) => new FloatRect
+    {
+        Position = GetScreenPosition(resolution),
+        Size = GetScreenSize(resolution),
+    };
+}
+
 public struct KSprite
 {
     public Color Color;
@@ -91,8 +191,7 @@ public class KRenderLayer
     private View _view;
 
     public bool IsStatic;
-    public float Scale;
-    public Vector2f Position;
+    public KCanvas Canvas;
     public PrimitiveType Primitive;
     public RenderStates States;
     public KBufferRegion Region;
@@ -100,7 +199,8 @@ public class KRenderLayer
     public Color ClearColor;
 
     public Texture Texture => RenderTexture.Texture;
-    public FloatRect Bounds => new(Position, (Vector2f)Texture.Size * Scale);
+    public FloatRect GetScreenBounds(Vector2f resolution) => 
+        Canvas.GetScreenBounds(resolution);
 
     public View View
     {
@@ -116,8 +216,6 @@ public class KRenderLayer
 
         _view = renderTexture.DefaultView;
         IsStatic = false;
-        Scale = 1;
-        Position = (0, 0);
         States = RenderStates.Default;
         ClearColor = Color.Transparent;
     }
@@ -156,6 +254,8 @@ public class KRenderLayer
 public class KRenderManager
 {
     private View _view;
+    private KResolution _resolution;
+ 
     public RenderWindow Window;
     public VertexBuffer VBuffer; //Refrence to the VertexBuffer.
     public KTextHandler TextHandler;
@@ -167,11 +267,18 @@ public class KRenderManager
         set => Window.SetView(_view = value);
     }
 
-    public KRenderManager(RenderWindow window, VertexBuffer vBuffer, KRenderLayer[] renderLayers, KTextHandler textHandler)
+    public KResolution Resolution
+    {
+        get => _resolution;
+        set => _resolution = value;
+    }
+
+    public KRenderManager(RenderWindow window, KResolution resolution, VertexBuffer vBuffer, KRenderLayer[] renderLayers, KTextHandler textHandler)
     {
         _view = window.DefaultView;
 
         Window = window;
+        _resolution = resolution;
         VBuffer = vBuffer;
         RenderLayers = renderLayers;
         TextHandler = textHandler;
@@ -181,7 +288,7 @@ public class KRenderManager
 
     public void FrameUpdate()
     {
-
+        DrawRectOutline(RenderLayers[0].GetScreenBounds(Resolution.Dimentions), Color.White, 1);
         for (int i = 0; i < RenderLayers.Length; i++)
         {
             //Renders each layer
@@ -190,7 +297,7 @@ public class KRenderManager
             RenderLayers[i].Display();
 
             //Draws each layer to the window.
-            FloatRect rect = RenderLayers[i].Bounds;
+            FloatRect rect = RenderLayers[i].GetScreenBounds(Resolution.Dimentions);
             FloatRect texRect = new((0, 0), (Vector2f)RenderLayers[i].Texture.Size);
 
             var buffer = ArrayPool<Vertex>.Shared.Rent(6);
@@ -300,7 +407,7 @@ public class KRenderManager
     private void ResizeView(object? _, SizeEventArgs e)
     {
         _view.Size = (Vector2f)e.Size;
-        _view.Center = _view.Size / 2;
+        _view.Center = (Vector2f)e.Size / 2;
         Window.SetView(_view);
     }
 }

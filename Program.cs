@@ -21,14 +21,6 @@ public static class KWindowExtensions
     public static float GetAspect(this Window self) => (float)self.Size.Y / self.Size.X;
 }
 
-public struct KResolution
-{
-    public float scale;
-    public Vector2f AspectRatio;
-
-    //Vector2f Resolution =>
-}
-
 //This class acts as the foundation for the rest of the program.
 //It contains the Main method, and initializes many systems for the application.
 //This class stands at the top of the program's heirarchy, 
@@ -43,6 +35,7 @@ public static class KProgram
 
     private static string s_title = "dungeons";
     public static bool Running = false;
+    public static KResolution Resolution;
     public static RenderWindow Window;
     public static KRenderManager RenderManager;
     public static KInputManager InputManager;
@@ -62,6 +55,8 @@ public static class KProgram
     static KProgram() //Initialization.
     {
         VideoMode videoMode = VideoMode.DesktopMode;
+        KResolution resolution = new((Vector2i)videoMode.Size);
+        
         Window = new(videoMode, Title);
         Window.Closed += (_, _) => Running = false;
         Window.SetFramerateLimit(60);
@@ -84,12 +79,16 @@ public static class KProgram
         #region Render Layers
 
         KRenderLayer WorldLayer = new(
-            new RenderTexture((640, 360)),
+            new RenderTexture((170, 90)),
             PrimitiveType.Triangles,
             bufferRegions[0])
         {
-            Scale = 1,
-            Position = (0, 0),
+            Canvas = new KCanvas
+            {
+                Position = (0,0),
+                Scale = new Vector2f(0.66666f, 0.66666f),
+                CanvasAnchor = KCanvasAnchor.CENTER
+            },
             States = new RenderStates(atlas.Texture),
         };
 
@@ -98,7 +97,12 @@ public static class KProgram
             PrimitiveType.Lines,
             bufferRegions[1])
         {
-            Position = (0, 0),
+            Canvas = new KCanvas
+            {
+                Position = (0,0),
+                Scale = new Vector2f(1, 1),
+                CanvasAnchor = KCanvasAnchor.TOP_LEFT
+            },
         };
         //lineLayer.Init(Window);
 
@@ -114,7 +118,7 @@ public static class KProgram
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
 
         //Initializes systems.
-        RenderManager = new(Window, vBuffer, renderLayers, textHandler);
+        RenderManager = new(Window, resolution, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
         GameManager = new(InputManager);
 
@@ -202,9 +206,4 @@ public static class KProgram
     }
     public static int GreatestCommonFactor(Vector2i values) =>
         GreatestCommonFactor(values.X, values.Y);
-
-    public static float GetResolutionScale(Vector2i res)
-    {
-        return res.Y / 1080.0f * 120.0f;
-    }
 }
