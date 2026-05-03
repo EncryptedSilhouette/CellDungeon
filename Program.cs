@@ -55,8 +55,8 @@ public static class KProgram
     static KProgram() //Initialization.
     {
         VideoMode videoMode = VideoMode.DesktopMode;
-        KResolution resolution = new((Vector2i)videoMode.Size);
-        
+        Console.WriteLine(videoMode.Size);
+
         Window = new(videoMode, Title);
         Window.Closed += (_, _) => Running = false;
         Window.SetFramerateLimit(60);
@@ -78,6 +78,20 @@ public static class KProgram
 
         #region Render Layers
 
+        KRenderLayer backLayer = new(
+            new(videoMode.Size),
+            PrimitiveType.Triangles,
+            bufferRegions[1])
+        {
+            Canvas = new KCanvas
+            {
+                Position = (0, 0),
+                Scale = new Vector2f(1, 1),
+                CanvasAnchor = KCanvasAnchor.CENTER
+            },
+            ClearColor = new(50, 50, 50),
+        };
+
         KRenderLayer WorldLayer = new(
             new RenderTexture((170, 90)),
             PrimitiveType.Triangles,
@@ -85,31 +99,18 @@ public static class KProgram
         {
             Canvas = new KCanvas
             {
-                Position = (0,0),
+                Position = (0.0037f, 0.0037f),
                 Scale = new Vector2f(0.66666f, 0.66666f),
-                CanvasAnchor = KCanvasAnchor.CENTER
+                CanvasAnchor = KCanvasAnchor.CENTER,
             },
             States = new RenderStates(atlas.Texture),
+            ClearColor = Color.White,
         };
-
-        KRenderLayer lineLayer = new(
-            new(VideoMode.DesktopMode.Size),
-            PrimitiveType.Lines,
-            bufferRegions[1])
-        {
-            Canvas = new KCanvas
-            {
-                Position = (0,0),
-                Scale = new Vector2f(1, 1),
-                CanvasAnchor = KCanvasAnchor.TOP_LEFT
-            },
-        };
-        //lineLayer.Init(Window);
 
         KRenderLayer[] renderLayers =
         [
+            backLayer,
             WorldLayer,
-            lineLayer
         ];
 
         #endregion
@@ -118,7 +119,7 @@ public static class KProgram
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
 
         //Initializes systems.
-        RenderManager = new(Window, resolution, vBuffer, renderLayers, textHandler);
+        RenderManager = new(Window, videoMode.Size, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
         GameManager = new(InputManager);
 
@@ -137,7 +138,7 @@ public static class KProgram
             Window.Clear();
 
             GameManager.FrameUpdate(RenderManager, currentFrame);
-            RenderManager.FrameUpdate();
+            RenderManager.FrameUpdate(currentFrame);
 
             Window.Display();
 
