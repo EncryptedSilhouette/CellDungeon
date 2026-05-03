@@ -32,7 +32,6 @@ public static class KProgram
 {
     //TODO 
     //Error handling
-
     private static string s_title = "dungeons";
     public static bool Running = false;
     public static KResolution Resolution;
