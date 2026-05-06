@@ -35,6 +35,6 @@ public class KPlayer
     {
         Sprite.Bounds.Position = Position;
 
-        renderer.DrawSprite(Sprite, 0);
+        renderer.DrawSprite(Sprite, 1);
     }
 }

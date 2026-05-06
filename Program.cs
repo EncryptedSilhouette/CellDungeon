@@ -53,7 +53,10 @@ public static class KProgram
 
     static KProgram() //Initialization.
     {
+
         VideoMode videoMode = VideoMode.DesktopMode;
+        Resolution = new((Vector2i)videoMode.Size);
+        Console.WriteLine($"{Resolution.AspectRatio}, {Resolution.Scale}");
         Console.WriteLine(videoMode.Size);
 
         Window = new(videoMode, Title);
@@ -84,8 +87,9 @@ public static class KProgram
         {
             Canvas = new KCanvas
             {
+                Scale = 1,
                 Position = (0, 0),
-                Scale = new Vector2f(1, 1),
+                AspectRatio = Resolution.AspectRatio,
                 CanvasAnchor = KCanvasAnchor.CENTER
             },
             ClearColor = new(50, 50, 50),
@@ -98,12 +102,13 @@ public static class KProgram
         {
             Canvas = new KCanvas
             {
-                Position = (0.0037f, 0.0037f),
-                Scale = new Vector2f(0.66666f, 0.66666f),
-                CanvasAnchor = KCanvasAnchor.CENTER,
+                Scale = 0.25f,
+                Position = (0.25f, 0.25f),
+                AspectRatio = Resolution.AspectRatio,
+                CanvasAnchor = KCanvasAnchor.RIGHT,
             },
             States = new RenderStates(atlas.Texture),
-            ClearColor = Color.White,
+            ClearColor = new (255,0,0,100),
         };
 
         KRenderLayer[] renderLayers =
@@ -118,7 +123,7 @@ public static class KProgram
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
 
         //Initializes systems.
-        RenderManager = new(Window, videoMode.Size, vBuffer, renderLayers, textHandler);
+        RenderManager = new(Window, Resolution, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
         GameManager = new(InputManager);
 
