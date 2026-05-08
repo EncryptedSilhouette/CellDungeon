@@ -1,0 +1,10 @@
+{{smartUpdateKey}}
+
+frames_start{% for sprite in allSprites %}
+{
+-id:{{sprite.trimmedName}};
+-pos:{{sprite.frameRect.x}},{{sprite.frameRect.y}};
+-size:{{sprite.frameRect.width}},{{sprite.frameRect.height}};
+}{% endfor %}
+frames_end
+

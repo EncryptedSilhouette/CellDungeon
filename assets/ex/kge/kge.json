@@ -1,0 +1,11 @@
+{
+  "smartUpdateKey":"{{smartUpdateKey}}",
+  "frames":[{% for sprite in allSprites %}
+    {
+      "id": "{{sprite.trimmedName}}",
+      "properties": [{{sprite.frameRect.x}}, {{sprite.frameRect.y}}, {{sprite.frameRect.width}}, {{sprite.frameRect.height}}]
+    }{% if not forloop.last %},{% endif %}{% endfor %}
+  ]
+}
+    
+

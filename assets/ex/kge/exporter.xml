@@ -1,0 +1,95 @@
+<exporter version="1.0">
+    <!-- identifier of the exporter -->
+    <name>kge</name>
+	
+    <!-- display name of the exporter for the combo box -->
+    <displayName>KGameEngine</displayName>
+	
+    <!-- description of the exporter -->
+    <description>idk what to put here</description>
+
+    <!-- exporter version -->
+    <version>1.0</version>
+	
+    <files>
+        <file>
+            <!-- name of this file variable -->
+            <name>textures</name>
+
+            <!-- human readable name (for GUI) -->
+            <displayName>File name</displayName>
+
+            <!-- file extension for the file -->
+            <fileExtension>txt</fileExtension>
+
+            <!-- description what the file contains, used in tooltips in the GUI -->
+            <description>Text file for KGameEngine</description>
+
+            <!-- name of the template file -->
+            <template>kge.txt</template>
+        </file>
+    </files>
+
+    <!-- target framework supports trimming -->
+    <supportsTrimming>true</supportsTrimming>
+
+    <!-- target framework supports rotated sprites -->
+    <supportsRotation>true</supportsRotation>
+
+    <!-- rotated sprites direction (cw/ccw) -->
+    <rotationDirection>cw</rotationDirection>
+
+    <!-- supports npot sizes -->
+    <supportsNPOT>true</supportsNPOT>
+
+    <!-- supports file name stripping (remove .png etc) -->
+    <supportsTrimSpriteNames>yes</supportsTrimSpriteNames>
+
+    <!-- supports texure subpath -->
+    <supportsTextureSubPath>yes</supportsTextureSubPath>
+
+    <!-- default values, applied when the exporter is activated in the UI or command line -->
+    <defaults>
+        <!-- this is currently only a subset of settings -->
+        <extrude>0</extrude>
+        <shapePadding>0</shapePadding>
+        <borderPadding>0</borderPadding>
+        <trimMode>None</trimMode>
+        <writePivotPoints>false</writePivotPoints>
+        <sizeConstraints>AnySize</sizeConstraints>
+    </defaults>
+
+    <!-- scaling variant presets -->
+    <variantPresets>
+        <variantPreset>
+            <name>Plain @2x</name>
+            <variant>
+                <scale>1.0</scale>
+                <extension>@2x</extension>
+            </variant>
+            <variant>
+                <scale>0.5</scale>
+                <extension></extension>
+            </variant>
+        </variantPreset>
+
+        <variantPreset>
+            <name>Plain @4x/@2x</name>
+            <variant>
+                <scale>1.0</scale>
+                <extension>@4x</extension>
+            </variant>
+            <variant>
+                <scale>0.5</scale>
+                <extension>@2x</extension>
+            </variant>
+            <variant>
+                <scale>0.25</scale>
+                <extension></extension>
+            </variant>
+        </variantPreset>
+    </variantPresets>
+
+</exporter>
+
+

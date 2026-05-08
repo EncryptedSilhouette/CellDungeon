@@ -286,13 +286,13 @@ public class KRenderManager
     public void FrameUpdate(ulong currentFrame)
     {
 
-        if (currentFrame % 30 == 0)
-        {
-            ref var canvas = ref RenderLayers[1].Canvas;
-            var anchor = canvas.CanvasAnchor;
-            anchor = anchor + 1 == KCanvasAnchor.UNDEFINED ? 0 : anchor + 1;
-            canvas.CanvasAnchor = anchor; 
-        }
+        // if (currentFrame % 30 == 0)
+        // {
+        //     ref var canvas = ref RenderLayers[1].Canvas;
+        //     var anchor = canvas.CanvasAnchor;
+        //     anchor = anchor + 1 == KCanvasAnchor.UNDEFINED ? 0 : anchor + 1;
+        //     canvas.CanvasAnchor = anchor; 
+        // }
 
         
         //DrawRectOutline(bounds, Color.White, 1);

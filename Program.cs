@@ -105,10 +105,10 @@ public static class KProgram
                 Scale = 0.25f,
                 Position = (0.25f, 0.25f),
                 AspectRatio = Resolution.AspectRatio,
-                CanvasAnchor = KCanvasAnchor.RIGHT,
+                CanvasAnchor = KCanvasAnchor.TOP_RIGHT,
             },
             States = new RenderStates(atlas.Texture),
-            ClearColor = new (255,0,0,100),
+            ClearColor = new(255, 0, 0, 100),
         };
 
         KRenderLayer[] renderLayers =
