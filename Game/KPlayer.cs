@@ -6,6 +6,14 @@ public class KPlayer
     public Vector2f Position;
     public KSprite Sprite;
 
+    public struct KInterpolation
+    {
+
+        int GetInterpolatedValue()
+        {
+        }
+    }
+
     public KPlayer()
     {
         Position = (0, 0);
