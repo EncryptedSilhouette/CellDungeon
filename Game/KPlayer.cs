@@ -6,21 +6,21 @@ public class KPlayer
     public Vector2f Position;
     public KSprite Sprite;
 
-    public struct KInterpolation
-    {
+    // public struct KInterpolation
+    // {
 
-        int GetInterpolatedValue()
-        {
-        }
-    }
+    //     int GetInterpolatedValue()
+    //     {
+    //     }
+    // }
 
     public KPlayer()
     {
-        Position = (0, 0);
+        Position = (50, 50);
         Sprite = new KSprite
         {
             Color = Color.Blue,
-            Bounds = new(Position, (4, 4)),
+            Bounds = new(Position - (16, 16), (32, 32)),
             //Replace with refrence.
             TRect = KProgram.TextureAtlas.Sprites["node0"],
         };
@@ -36,13 +36,12 @@ public class KPlayer
         if (input.IsKeyDown(SFML.Window.Keyboard.Key.W)) direction.Y = -1;
         else if (input.IsKeyDown(SFML.Window.Keyboard.Key.S)) direction.Y = 1;
 
-        Position += direction;
+        Position += direction * 5;
     }
 
     public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
     {
-        Sprite.Bounds.Position = Position;
-
-        renderer.DrawSprite(Sprite, 1);
+        Sprite.Bounds.Position = Position - Sprite.Bounds.Size / 2;
+        renderer.DrawSprite(Sprite, 0);
     }
 }

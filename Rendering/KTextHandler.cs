@@ -57,7 +57,7 @@ public class KTextHandler
     }
 
     public void FrameUpdate(IRenderTarget target) =>
-        VBuffer.Draw(target, ref Region, States);
+        VBuffer.DrawTo(target, ref Region, States);
 
     public Glyph GetGlyph(byte ch, bool bold, bool updateTexture = false)
     {

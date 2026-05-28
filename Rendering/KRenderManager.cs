@@ -28,33 +28,19 @@ public static class KVertexBufferExtensions
         region.Count += vCount;
     }
 
-    public static void DrawLine(this VertexBuffer self, Vector2f pointA, Vector2f pointB, Color color, ref KBufferRegion region)
-    {
-        var buffer = ArrayPool<Vertex>.Shared.Rent(2);
-        buffer[0] = new(pointA, color);
-        buffer[1] = new(pointB, color);
+    //Refactor to use Triangles
+    // public static void DrawLine(this VertexBuffer self, Vector2f pointA, Vector2f pointB, Color color, ref KBufferRegion region)
+    // {
+    //     var buffer = ArrayPool<Vertex>.Shared.Rent(2);
+    //     buffer[0] = new(pointA, color);
+    //     buffer[1] = new(pointB, color);
 
-        self.DrawBuffer(buffer, 2, ref region);
-    }
+    //     self.DrawBuffer(buffer, 2, ref region);
+    // }
 
     //SFML 3.0 removed Quads from their PrimitiveType enum, so you must draw quads with triangles.
     //ABD represents the first half of the quad (top left, top right, bottom left), 
     //BCD represents the other half (top right, bottom right, bottom, left). 
-    public static void DrawRect(this VertexBuffer self, FloatRect rect, Color color, ref KBufferRegion region)
-    {
-        var buffer = ArrayPool<Vertex>.Shared.Rent(6);
-        //ABD       
-        buffer[0] = new((rect.Left, rect.Top), color, (0, 0));
-        buffer[1] = new((rect.Left + rect.Width, rect.Top), color, (0, 0));
-        buffer[2] = new((rect.Left, rect.Top + rect.Height), color, (0, 0));
-        //BCD
-        buffer[3] = buffer[1];
-        buffer[4] = new((rect.Left + rect.Width, rect.Top + rect.Height), color, (0, 0));
-        buffer[5] = buffer[2];
-
-        self.DrawBuffer(buffer, 6, ref region);
-    }
-
     public static void DrawRect(this VertexBuffer self, FloatRect rect, FloatRect textureRect, Color color, ref KBufferRegion region)
     {
         var buffer = ArrayPool<Vertex>.Shared.Rent(6);
@@ -70,7 +56,47 @@ public static class KVertexBufferExtensions
         self.DrawBuffer(buffer, 6, ref region);
     }
 
-    public static void Draw(this VertexBuffer self, IRenderTarget target, ref KBufferRegion region, RenderStates states, bool resetRegion = false)
+    public static void DrawRect(this VertexBuffer self, FloatRect rect, Color color, ref KBufferRegion region) =>
+        self.DrawRect(rect, new((0, 0), (0, 0)), color, ref region);
+
+
+    public static void DrawArc(this VertexBuffer self, KCircle circle, float startAngle, float arcLength, int segments, Color color, ref KBufferRegion region)
+    {
+        var buffer = ArrayPool<Vertex>.Shared.Rent(segments * 3);
+
+        float angle = arcLength / segments;
+        float angleInc = startAngle;
+
+        for (int i = 0; i < segments; i++)
+        {
+            buffer[i * 3] = new Vertex
+            {
+                Position = circle.Position,
+                Color = color,
+            };
+            buffer[i * 3 + 1] = new Vertex
+            {
+                Position = circle.Position + new Vector2f(MathF.Cos(angleInc), MathF.Sin(angleInc)) * circle.Radius,
+                Color = color,
+            };
+
+            angleInc += angle;
+
+            buffer[i * 3 + 2] = new Vertex
+            {
+                Position = circle.Position + new Vector2f(MathF.Cos(angleInc), MathF.Sin(angleInc)) * circle.Radius,
+                Color = color,
+            };
+        }
+
+        self.DrawBuffer(buffer, (uint)segments * 3, ref region);
+
+        ArrayPool<Vertex>.Shared.Return(buffer);
+    }
+    public static void DrawCircle(this VertexBuffer self, KCircle circle, int segments, Color color, ref KBufferRegion region) =>
+        self.DrawArc(circle, 0.0f, MathF.PI * 2, segments, color, ref region);
+
+    public static void DrawTo(this VertexBuffer self, IRenderTarget target, ref KBufferRegion region, RenderStates states, bool resetRegion = false)
     {
         self.Draw(target, region.Offset, region.Count, states);
         if (resetRegion) region.Count = 0;
@@ -162,9 +188,9 @@ public struct KCanvas
                 Y = resolution.Dimentions.Y / 2.0f - pos.Y - size.Y,
             },
 
-            _ => new(0,0)
-        };  
-    } 
+            _ => new(0, 0)
+        };
+    }
 
     public Vector2f GetScreenSize(KResolution resolution) => new Vector2f
     {
@@ -201,7 +227,7 @@ public class KRenderLayer
     public Color ClearColor;
 
     public Texture Texture => RenderTexture.Texture;
-    public FloatRect GetScreenBounds(KResolution resolution) => 
+    public FloatRect GetScreenBounds(KResolution resolution) =>
         Canvas.GetScreenBounds(resolution);
 
     public View View
@@ -227,7 +253,7 @@ public class KRenderLayer
     public void RenderFrame(VertexBuffer buffer)
     {
         if (buffer.PrimitiveType != Primitive) buffer.PrimitiveType = Primitive;
-        buffer.Draw(RenderTexture, ref Region, States);
+        buffer.DrawTo(RenderTexture, ref Region, States);
         if (!IsStatic) Region.Count = 0;
     }
 
@@ -294,7 +320,7 @@ public class KRenderManager
         //     canvas.CanvasAnchor = anchor; 
         // }
 
-        
+
         //DrawRectOutline(bounds, Color.White, 1);
 
         for (int i = 0; i < RenderLayers.Length; i++)
@@ -335,9 +361,6 @@ public class KRenderManager
     public void DrawBuffer(Vertex[] vertices, uint vCount, int layer) =>
         VBuffer.DrawBuffer(vertices, vCount, ref RenderLayers[layer].Region);
 
-    public void DrawLine(Vector2f a, Vector2f b, Color color, int layer) =>
-        VBuffer.DrawLine(a, b, color, ref RenderLayers[layer].Region);
-
     //This method is gonna make me kms.
     public void DrawRectOutline(IntRect rect, Color color, int layer)
     {
@@ -366,6 +389,12 @@ public class KRenderManager
 
     public void DrawRect(FloatRect rect, FloatRect textureRect, Color color, int layer) =>
         VBuffer.DrawRect(rect, textureRect, color, ref RenderLayers[layer].Region);
+
+    public void DrawCircle(KCircle circle, int segments, Color color, int layer) =>
+        VBuffer.DrawCircle(circle, segments, color, ref RenderLayers[layer].Region);
+
+    public void DrawArc(KCircle circle, float angleA, float arcLength, int segments, Color color, int layer) =>
+        VBuffer.DrawArc(circle, angleA, arcLength, segments, color, ref RenderLayers[layer].Region);
 
     public void DrawSprite(KSprite sprite, int layer) =>
         VBuffer.DrawRect(sprite.Bounds, sprite.TRect, sprite.Color, ref RenderLayers[layer].Region);

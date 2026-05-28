@@ -83,7 +83,7 @@ public static class KProgram
         KRenderLayer backLayer = new(
             new(videoMode.Size),
             PrimitiveType.Triangles,
-            bufferRegions[1])
+            bufferRegions[0])
         {
             Canvas = new KCanvas
             {
@@ -95,10 +95,10 @@ public static class KProgram
             ClearColor = new(50, 50, 50),
         };
 
-        KRenderLayer WorldLayer = new(
+        KRenderLayer worldLayer = new(
             new RenderTexture((170, 90)),
             PrimitiveType.Triangles,
-            bufferRegions[0])
+            bufferRegions[1])
         {
             Canvas = new KCanvas
             {
@@ -108,13 +108,13 @@ public static class KProgram
                 CanvasAnchor = KCanvasAnchor.CENTER,
             },
             States = new RenderStates(atlas.Texture),
-            ClearColor = new(255, 0, 0, 100),
+            ClearColor = Color.Transparent,
         };
 
         KRenderLayer[] renderLayers =
         [
             backLayer,
-            WorldLayer,
+            worldLayer,
         ];
 
         #endregion
@@ -137,20 +137,35 @@ public static class KProgram
 
         while (Running)
         {
-            GameManager.Update(currentFrame);
+            UserUpdate(currentFrame);
 
-            Window.Clear();
+            Update(currentFrame);
 
-            GameManager.FrameUpdate(RenderManager, currentFrame);
-            RenderManager.FrameUpdate(currentFrame);
-
-            Window.Display();
-
-            InputManager.Update();
-            Window.DispatchEvents();
+            FrameUpdate(currentFrame);
 
             currentFrame++;
         }
+    }
+
+    public static void UserUpdate(ulong currentFrame)
+    {
+        InputManager.Update();
+        Window.DispatchEvents();
+    }
+
+    public static void Update(ulong currentFrame)
+    {
+        GameManager.Update(currentFrame);
+    }
+
+    public static void FrameUpdate(ulong currentFrame)
+    {
+        Window.Clear();
+
+        GameManager.FrameUpdate(RenderManager, currentFrame);
+        RenderManager.FrameUpdate(currentFrame);
+
+        Window.Display();
     }
 
     //Needs reworking.
