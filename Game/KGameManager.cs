@@ -1,3 +1,4 @@
+using SFML.Graphics;
 using SFML.System;
 
 public class KGameManager
@@ -14,6 +15,13 @@ public class KGameManager
     public KPlayer Player;
     public KInputManager InputManager;
     public KAICharacter AI;
+
+    KCircle circle0 = new((0,0), 50);
+    FloatRect rect0 = new((500,100), (100, 50));
+    Color rectColor = default;
+
+    Color defaultColor = new(255, 255, 255, 200);
+    Color collisionColor = new(255, 0, 0, 200);
 
     public KGameManager(KInputManager inputManager)
     {
@@ -41,6 +49,12 @@ public class KGameManager
 
     public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
     {
+        circle0.Position = Player.Position;
+        rectColor = KCollision.CircleRect(circle0, rect0) ? 
+            collisionColor : defaultColor;
+
+        renderer.DrawRect(rect0, rectColor, 0);
+        renderer.DrawCircle(circle0, 32, defaultColor, 0);
         Player.FrameUpdate(renderer, currentFrame);
     }
 }
