@@ -28,24 +28,15 @@ public static class KVertexBufferExtensions
         region.Count += vCount;
     }
 
-    //Refactor to use Triangles
-    // public static void DrawLine(this VertexBuffer self, Vector2f pointA, Vector2f pointB, Color color, ref KBufferRegion region)
-    // {
-    //     var buffer = ArrayPool<Vertex>.Shared.Rent(2);
-    //     buffer[0] = new(pointA, color);
-    //     buffer[1] = new(pointB, color);
-
-    //     self.DrawBuffer(buffer, 2, ref region);
-    // }
-
     //SFML 3.0 removed Quads from their PrimitiveType enum, so you must draw quads with triangles.
     //ABD represents the first half of the quad (top left, top right, bottom left), 
     //BCD represents the other half (top right, bottom right, bottom, left). 
     public static void DrawRect(this VertexBuffer self, FloatRect rect, FloatRect textureRect, Color color, ref KBufferRegion region)
     {
         var buffer = ArrayPool<Vertex>.Shared.Rent(6);
+
         //ABD
-        buffer[0] = new(rect.Position, color, textureRect.Position);
+        buffer[0] = new((rect.Position), color, textureRect.Position);
         buffer[1] = new((rect.Left + rect.Width, rect.Top), color, (textureRect.Left + textureRect.Width, textureRect.Top));
         buffer[2] = new((rect.Left, rect.Top + rect.Height), color, (textureRect.Left, textureRect.Top + textureRect.Height));
         //BCD
@@ -127,82 +118,89 @@ public struct KResolution
 
 public struct KCanvas
 {
-    public float Scale;
-    public Vector2f Position;
-    public Vector2f AspectRatio;
-    public KCanvasAnchor CanvasAnchor;
+    public required Vector2i Resolution;
+    public required Vector2i Position;
+    public required KCanvasAnchor Anchor;
 
-    public Vector2f GetScreenPosition(KResolution resolution)
+    public KCanvas(Vector2i position, Vector2i resolution, KCanvasAnchor anchor)
     {
-        Vector2f size = AspectRatio * resolution.Scale * Scale;
-        Vector2f pos = Position * resolution.Scale * Scale;
+        Position = position;
+        Resolution = resolution;
+        Anchor = anchor;
+    }
 
-        return CanvasAnchor switch
+    public KCanvas(Vector2i resolution, KCanvasAnchor anchor) :
+        this((0, 0), resolution, anchor)
+    { }
+
+    public KCanvas(Vector2i resolution) :
+        this((0, 0), resolution, KCanvasAnchor.CENTER)
+    { }
+
+    public Vector2i ScaledResolution(int scale) => Resolution * scale;
+    public Vector2i ScaledPosition(int scale) => Position * scale;
+
+    public FloatRect ScreenBounds(int scale)
+    {
+        Vector2f res = (Vector2f)ScaledResolution(scale);
+        Vector2f pos = (Vector2f)ScaledPosition(scale);
+
+        pos = Anchor switch
         {
             //Top
             KCanvasAnchor.TOP_LEFT => new Vector2f
             {
-                X = pos.X - resolution.Dimentions.X / 2.0f,
-                Y = pos.Y - resolution.Dimentions.Y / 2.0f,
+                X = pos.X - res.X / 2.0f,
+                Y = pos.Y - res.Y / 2.0f,
             },
             KCanvasAnchor.TOP => new Vector2f
             {
-                X = pos.X - size.X / 2.0f,
-                Y = pos.Y - resolution.Dimentions.Y / 2.0f,
+                X = pos.X - res.X / 2.0f,
+                Y = pos.Y - res.Y / 2.0f,
             },
             KCanvasAnchor.TOP_RIGHT => new Vector2f
             {
-                X = resolution.Dimentions.X / 2.0f - pos.X - size.X,
-                Y = pos.Y - resolution.Dimentions.Y / 2.0f,
+                X = res.X / 2.0f - pos.X - res.X,
+                Y = pos.Y - res.Y / 2.0f,
             },
             //Center
             KCanvasAnchor.LEFT => new Vector2f
             {
-                X = pos.X - resolution.Dimentions.X / 2.0f,
-                Y = pos.Y - size.Y / 2.0f,
+                X = pos.X - res.X / 2.0f,
+                Y = pos.Y - res.Y / 2.0f,
             },
             KCanvasAnchor.CENTER => new Vector2f
             {
-                X = pos.X - size.X / 2.0f,
-                Y = pos.Y - size.Y / 2.0f,
+                X = pos.X - res.X / 2.0f,
+                Y = pos.Y - res.Y / 2.0f,
             },
             KCanvasAnchor.RIGHT => new Vector2f
             {
-                X = resolution.Dimentions.X / 2.0f - pos.X - size.X,
-                Y = pos.Y - size.Y / 2.0f,
+                X = res.X / 2.0f - pos.X - res.X,
+                Y = pos.Y - res.Y / 2.0f,
             },
             //bottom
             KCanvasAnchor.BOTTOM_LEFT => new Vector2f
             {
-                X = pos.X - resolution.Dimentions.X / 2.0f,
-                Y = resolution.Dimentions.Y / 2.0f - pos.Y - size.Y,
+                X = pos.X - res.X / 2.0f,
+                Y = res.Y / 2.0f - pos.Y - res.Y,
             },
             KCanvasAnchor.BOTTOM => new Vector2f
             {
-                X = pos.X - size.X / 2.0f,
-                Y = resolution.Dimentions.Y / 2.0f - pos.Y - size.Y,
+                X = pos.X - res.X / 2.0f,
+                Y = res.Y / 2.0f - pos.Y - res.Y,
             },
             KCanvasAnchor.BOTTOM_RIGHT => new Vector2f
             {
-                X = resolution.Dimentions.X / 2.0f - pos.X - size.X,
-                Y = resolution.Dimentions.Y / 2.0f - pos.Y - size.Y,
+                X = res.X / 2.0f - pos.X - res.X,
+                Y = res.Y / 2.0f - pos.Y - res.Y,
             },
 
             _ => new(0, 0)
         };
+
+        return new(pos, res);
     }
-
-    public Vector2f GetScreenSize(KResolution resolution) => new Vector2f
-    {
-        X = AspectRatio.X * resolution.Scale * Scale,
-        Y = AspectRatio.Y * resolution.Scale * Scale,
-    };
-
-    public FloatRect GetScreenBounds(KResolution resolution) => new FloatRect
-    {
-        Position = GetScreenPosition(resolution),
-        Size = GetScreenSize(resolution),
-    };
 }
 
 public struct KSprite
@@ -227,8 +225,6 @@ public class KRenderLayer
     public Color ClearColor;
 
     public Texture Texture => RenderTexture.Texture;
-    public FloatRect GetScreenBounds(KResolution resolution) =>
-        Canvas.GetScreenBounds(resolution);
 
     public View View
     {
@@ -236,17 +232,24 @@ public class KRenderLayer
         set => RenderTexture.SetView(_view = value);
     }
 
-    public KRenderLayer(RenderTexture renderTexture, PrimitiveType primitive, KBufferRegion region)
+    public KRenderLayer(KCanvas canvas, PrimitiveType primitive, KBufferRegion region, RenderStates states)
     {
-        RenderTexture = renderTexture;
+        IsStatic = false;
+        Canvas = canvas;
         Primitive = primitive;
         Region = region;
-
-        _view = renderTexture.DefaultView;
-        IsStatic = false;
-        States = RenderStates.Default;
+        States = states;
+        RenderTexture = new((Vector2u)canvas.Resolution);
         ClearColor = Color.Transparent;
+
+        _view = RenderTexture.DefaultView;
     }
+
+    public KRenderLayer(KCanvas canvas, KBufferRegion region) :
+        this(canvas, PrimitiveType.Triangles, region, RenderStates.Default)
+    { }
+
+    public FloatRect ScreenBounds(int scale) => Canvas.ScreenBounds(scale);
 
     public void Clear() => RenderTexture.Clear(ClearColor);
 
@@ -258,31 +261,13 @@ public class KRenderLayer
     }
 
     public void Display() => RenderTexture.Display();
-
-    //Maybe overengineering?? I don't think there will be a case to draw to a layer directly,
-    //unless used outside of the RenderManager type.
-    // public void DrawBuffer(VertexBuffer vBuffer, Vertex[] vertices, uint vCount) =>
-    //     vBuffer.DrawBuffer(vertices, vCount, ref Region);
-
-    // public void DrawLine(VertexBuffer vBuffer, Vector2f a, Vector2f b, Color color) =>
-    //     vBuffer.DrawLine(a, b, color, ref Region);
-
-    // public void DrawRect(VertexBuffer vBuffer, FloatRect rect, Color color) =>
-    //     vBuffer.DrawRect(rect, color, ref Region);
-
-    // public void DrawRect(VertexBuffer vBuffer, FloatRect rect, FloatRect textureRect, Color color) =>
-    //     vBuffer.DrawRect(rect, textureRect, color, ref Region);
-
-    // public Vector2f GetScaleRelativeTo(Vector2f otherSize) =>
-    //     new(otherSize.X / Bounds.Size.X, otherSize.Y / Bounds.Size.Y);
-    // public float GetScaleXRelativeTo(float width) => width / Bounds.Size.X;
-    // public float GetScaleYRelativeTo(float height) => height / Bounds.Size.Y;
 }
 
 public class KRenderManager
 {
     private View _view;
-    private KResolution Resolution;
+    private int RenderScale;
+
     public RenderWindow Window;
     public VertexBuffer VBuffer; //Refrence to the VertexBuffer.
     public KTextHandler TextHandler;
@@ -294,14 +279,14 @@ public class KRenderManager
         set => Window.SetView(_view = value);
     }
 
-    public KRenderManager(RenderWindow window, KResolution resolution, VertexBuffer vBuffer, KRenderLayer[] renderLayers, KTextHandler textHandler)
+    public KRenderManager(int scale, RenderWindow window, VertexBuffer vBuffer, KRenderLayer[] renderLayers, KTextHandler textHandler)
     {
+        RenderScale = scale;
         Window = window;
         _view = window.DefaultView;
         _view.Center = (0, 0);
         View = _view;
 
-        Resolution = resolution;
         VBuffer = vBuffer;
         RenderLayers = renderLayers;
         TextHandler = textHandler;
@@ -331,7 +316,7 @@ public class KRenderManager
             RenderLayers[i].Display();
 
             //Draws each layer to the window.
-            FloatRect rect = RenderLayers[i].GetScreenBounds(Resolution);
+            FloatRect rect = RenderLayers[i].ScreenBounds(RenderScale);
             FloatRect texRect = new((0, 0), (Vector2f)RenderLayers[i].Texture.Size);
 
             var buffer = ArrayPool<Vertex>.Shared.Rent(6);

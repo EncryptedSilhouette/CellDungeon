@@ -33,6 +33,7 @@ public class KPlayer
         //X axis.
         if (input.IsKeyDown(SFML.Window.Keyboard.Key.A)) direction.X = -1;
         else if (input.IsKeyDown(SFML.Window.Keyboard.Key.D)) direction.X = 1;
+        //Y axis.
         if (input.IsKeyDown(SFML.Window.Keyboard.Key.W)) direction.Y = -1;
         else if (input.IsKeyDown(SFML.Window.Keyboard.Key.S)) direction.Y = 1;
 
@@ -42,6 +43,7 @@ public class KPlayer
     public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
     {
         Sprite.Bounds.Position = Position - Sprite.Bounds.Size / 2;
+        renderer.DrawCircle(new(Position, 16), 16, Color.White, 0);
         renderer.DrawSprite(Sprite, 0);
     }
 }

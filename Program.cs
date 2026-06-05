@@ -53,11 +53,8 @@ public static class KProgram
 
     static KProgram() //Initialization.
     {
-
         VideoMode videoMode = VideoMode.DesktopMode;
-        Resolution = new((Vector2i)videoMode.Size);
-        Console.WriteLine($"{Resolution.AspectRatio}, {Resolution.Scale}");
-        Console.WriteLine(videoMode.Size);
+        int RenderScale = (int)VideoMode.DesktopMode.Size.X / 640;
 
         Window = new(videoMode, Title);
         Window.Closed += (_, _) => Running = false;
@@ -80,40 +77,21 @@ public static class KProgram
 
         #region Render Layers
 
-        KRenderLayer backLayer = new(
-            new(videoMode.Size),
-            PrimitiveType.Triangles,
-            bufferRegions[0])
-        {
-            Canvas = new KCanvas
-            {
-                Scale = 1,
-                Position = (0, 0),
-                AspectRatio = Resolution.AspectRatio,
-                CanvasAnchor = KCanvasAnchor.CENTER
-            },
-            ClearColor = new(50, 50, 50),
-        };
-
         KRenderLayer worldLayer = new(
-            new RenderTexture((170, 90)),
-            PrimitiveType.Triangles,
+            new KCanvas
+            {
+                Resolution = (640, 360),
+                Position = (0, 0),
+                Anchor = KCanvasAnchor.CENTER
+            },
             bufferRegions[1])
         {
-            Canvas = new KCanvas
-            {
-                Scale = 1.0f,
-                Position = (0.0f, 0.0f),
-                AspectRatio = Resolution.AspectRatio,
-                CanvasAnchor = KCanvasAnchor.CENTER,
-            },
             States = new RenderStates(atlas.Texture),
-            ClearColor = Color.Transparent,
+            ClearColor = new(255, 255, 255, 50),
         };
 
         KRenderLayer[] renderLayers =
         [
-            backLayer,
             worldLayer,
         ];
 
@@ -123,7 +101,7 @@ public static class KProgram
         KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
 
         //Initializes systems.
-        RenderManager = new(Window, Resolution, vBuffer, renderLayers, textHandler);
+        RenderManager = new(RenderScale, Window, vBuffer, renderLayers, textHandler);
         InputManager = new(Window);
         GameManager = new(InputManager);
 
@@ -212,14 +190,14 @@ public static class KProgram
     }
 
     //Resoution shit.
-    public static int GreatestCommonFactor(int x, int y)
+    public static int GreatestCommonFactor(int a, int b)
     {
-        var smaller = Math.Min(x, y);
+        var smaller = Math.Min(a, b);
         var factor = 1;
 
         for (int i = 2; i <= smaller; i++)
         {
-            if ((x % i == 0) && (y % i == 0)) factor = i;
+            if ((a % i == 0) && (b % i == 0)) factor = i;
         }
 
         return factor;
