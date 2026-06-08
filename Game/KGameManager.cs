@@ -1,16 +1,28 @@
-using SFML.Graphics;
 using SFML.System;
 
-public interface IKGameSystem
+//Arrays of Structures:
+//string|int|KSprite |string|int|KSprite |string|int|KSprite |...
+
+//Structures of arrays:
+//string         |string        |string        |...
+//int            |int           |int           |...
+//KEntitySprite  |KEntitySprite |KEntitySprite |...
+public interface IKEntityHandler 
 {
-    public void UserUpdate(ulong frame, KGameManager game);
     public void Update(ulong frame, KGameManager game);
     public void FrameUpdate(ulong frame, KRenderManager renderer, KGameManager game);
 }
 
-public interface IKEntityHandler : IKGameSystem
+public struct KGamePosition
 {
+    public Vector2f Position;
+    public Vector2f Direction;
+}
 
+public enum KEntityState
+{
+    NONE, 
+    PATROL,
 }
 
 public class KGameManager
@@ -24,98 +36,42 @@ public class KGameManager
     };
 
     public KInputManager InputManager;
-    public KPlayer Player;
-    public List<IKEntityHandler> EntityHandlers;
 
-    KCircle circle0 = new((0,0), 50);
-    FloatRect rect0 = new((500,100), (100, 50));
-    Color rectColor = default;
-
-    Color defaultColor = new(255, 255, 255, 200);
-    Color collisionColor = new(255, 0, 0, 200);
-
-    public KGameManager(KInputManager inputManager)
-    {
-        InputManager = inputManager;
-        Player = new();
-        EntityHandlers = [];
-    }
-
-    public void Update(ulong currentFrame)
-    {
-        Player.Update(InputManager, currentFrame);
-    }
-
-    public void FrameUpdate(KRenderManager renderer, ulong currentFrame)
-    {
-        circle0.Position = Player.Position;
-        rectColor = KCollision.CircleRect(circle0, rect0) ? 
-            collisionColor : defaultColor;
-
-        renderer.DrawRect(rect0, rectColor, 0);
-        renderer.DrawCircle(circle0, 32, defaultColor, 0);
-        Player.FrameUpdate(renderer, currentFrame);
-    }
-}
-
-#if DEBUG
-
-public struct KDebugEntity
-{
-    public KSprite Sprite;
-    public Vector2f Position;
-
-    public KDebugEntity()
-    {
-
-    }
-}
-
-public class KDebugEntityHandler : IKEntityHandler
-{
-    enum KDebugEntityState
-    {
-        NONE, 
-        PATROL,
-    }
-
-    public KGameManager Game;
-
+    public int MaxEntities;
     public int EntityCount;
-    public KDebugEntity[] entities;
+    public int[] Handles;
+    public bool[] IsAlive;
+    public KGamePosition[] Position;
+    public KSprite[] Sprites;
+    public KEntityState[] States;
+    public List<IKEntityHandler> entityHandlers;
 
-    public int MaxEntities => entities.Length;
-
-    public KDebugEntityHandler(KGameManager game)
+    public KGameManager(KInputManager input, IEnumerable<IKEntityHandler> children)
     {
-        Game = game;
-        entities = new KDebugEntity[256];
+        InputManager = input;
+
+        MaxEntities = 1024;
+        Handles = new int[MaxEntities];
+        IsAlive = new bool[MaxEntities];
+        Position = new KGamePosition[MaxEntities];
+        Sprites = new KSprite[MaxEntities];
+        States = new KEntityState[MaxEntities];
+        entityHandlers = new(children);
     }
 
-    public void Spawn()
+    public void Update(ulong frame)
     {
-
-    }
-
-    public void UserUpdate(ulong frame, KGameManager game)
-    {
-    }
-
-    public void Update(ulong frame, KGameManager game)
-    {
-        for (int i = 0; i < entities.Length; i++)
+        for (int i = 0; i < Position.Length; i++)
         {
-
+            entityHandlers[i].Update(frame, this);
         }
     }
 
-    public void FrameUpdate(ulong frame, KRenderManager renderer, KGameManager game)
+    public void FrameUpdate(ulong frame, KRenderManager renderer)
     {
-        for (int i = 0; i < entities.Length; i++)
+        for (int i = 0; i < MaxEntities; i++)
         {
-            renderer.DrawSprite(entities[i].Sprite, 0);
+            entityHandlers[i].FrameUpdate(frame, renderer, this);
         }
     }
 }
-
-#endif

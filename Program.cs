@@ -32,10 +32,10 @@ public static class KProgram
 {
     //TODO 
     //Error handling
-    private static string s_title = "dungeons";
+
+    private static string s_title;
+
     public static bool Running = false;
-    public static KResolution Resolution;
-    public static RenderWindow Window;
     public static KRenderManager RenderManager;
     public static KInputManager InputManager;
     public static KGameManager GameManager;
@@ -47,63 +47,16 @@ public static class KProgram
         set
         {
             s_title = value;
-            Window.SetTitle(value);
         }
     }
 
     static KProgram() //Initialization.
     {
-        VideoMode videoMode = VideoMode.DesktopMode;
-        int RenderScale = (int)VideoMode.DesktopMode.Size.X / 640;
-
-        Window = new(videoMode, Title);
-        Window.Closed += (_, _) => Running = false;
-        Window.SetFramerateLimit(60);
-
-        //Single vertexBuffer for entire program.
-        //This will need constant tweaking until a better system is created.
-        VertexBuffer vBuffer = new(18_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic);
-        //This buffer is split into regions for render layers and differing primitives.
-        KBufferRegion[] bufferRegions =
-        [
-            new(0, 6_000),      //Each region represents a range of verticies within the VertexBuffer.
-            new(6_000, 6_000),
-            new(12_000, 6_000),
-        ];
-
-        //Load default atlas.
-        LoadAtlas("assets/atlas.csv", out KTextureAtlas atlas);
-        TextureAtlas = atlas;
-
-        #region Render Layers
-
-        KRenderLayer worldLayer = new(
-            new KCanvas
-            {
-                Resolution = (640, 360),
-                Position = (0, 0),
-                Anchor = KCanvasAnchor.CENTER
-            },
-            bufferRegions[1])
-        {
-            States = new RenderStates(atlas.Texture),
-            ClearColor = new(255, 255, 255, 50),
-        };
-
-        KRenderLayer[] renderLayers =
-        [
-            worldLayer,
-        ];
-
-        #endregion
-
-        //handles text drawing.
-        KTextHandler textHandler = new(new Font("assets/Roboto-Black.ttf"), vBuffer, bufferRegions[2]);
-
+        
         //Initializes systems.
-        RenderManager = new(RenderScale, Window, vBuffer, renderLayers, textHandler);
-        InputManager = new(Window);
-        GameManager = new(InputManager);
+        RenderManager = new();
+        InputManager = new();
+        GameManager = new(InputManager, []);
 
         //If all succeed then allow the program to run.
         Running = true;
@@ -115,78 +68,23 @@ public static class KProgram
 
         while (Running)
         {
-            UserUpdate(currentFrame);
-
             Update(currentFrame);
-
             FrameUpdate(currentFrame);
 
             currentFrame++;
         }
     }
 
-    public static void UserUpdate(ulong currentFrame)
-    {
-        InputManager.Update();
-        Window.DispatchEvents();
-    }
-
     public static void Update(ulong currentFrame)
     {
+        InputManager.Update();
         GameManager.Update(currentFrame);
     }
 
     public static void FrameUpdate(ulong currentFrame)
     {
-        Window.Clear();
-
-        GameManager.FrameUpdate(RenderManager, currentFrame);
+        GameManager.FrameUpdate(currentFrame, RenderManager);
         RenderManager.FrameUpdate(currentFrame);
-
-        Window.Display();
-    }
-
-    //Needs reworking.
-    public static bool LoadAtlas(string filePath, out KTextureAtlas atlas)
-    {
-        var lines = File.ReadAllLines(filePath);
-        atlas = new KTextureAtlas
-        {
-            Texture = null!,
-            Sprites = new(),
-        };
-
-        for (int i = 0; i < lines.Length; i++)
-        {
-            if (lines[i] == string.Empty) continue;
-
-            var data = lines[i].Split(',');
-            if (data.Length < 1) continue;
-
-            try
-            {
-                switch (data[0])
-                {
-                    case "-at":
-                        atlas.Texture = new(data[1]);
-                        Console.WriteLine($"Loaded texture: {data[1]}.");
-                        break;
-
-                    case "-sp":
-                        atlas.Sprites.Add(data[1], new FloatRect
-                        {
-                            Position = (int.Parse(data[2]), int.Parse(data[3])),
-                            Size = (int.Parse(data[4]), int.Parse(data[5]))
-                        });
-                        break;
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"failed to read file: {filePath}, {e.Message}.");
-            }
-        }
-        return atlas.Texture is null ? false : true;
     }
 
     //Resoution shit.
@@ -204,4 +102,5 @@ public static class KProgram
     }
     public static int GreatestCommonFactor(Vector2i values) =>
         GreatestCommonFactor(values.X, values.Y);
+        
 }
