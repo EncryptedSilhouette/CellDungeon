@@ -3,14 +3,14 @@ using SFML.Window;
 
 public class KResourceManager
 {
-    private string _configPath; 
-    public KRenderLayer[] RenderLayers;
+    private string _configPath;
+    public KWorldRenderer[] RenderLayers;
 
 
     public KResourceManager(string configPath)
     {
         _configPath = configPath;
-        
+
     }
 
     public int InitAndLoad()
@@ -20,7 +20,7 @@ public class KResourceManager
         {
             try
             {
-                var lines = File.ReadAllLines("conf.csv");   
+                var lines = File.ReadAllLines("conf.csv");
 
                 for (int i = 0; i < lines.Length; i++)
                 {
@@ -33,16 +33,16 @@ public class KResourceManager
                         default:
                             break;
                     }
-                } 
+                }
             }
             catch
             {
-                
-            }    
-        }   
+
+            }
+        }
         else
         {
-            
+
         }
 
         Window.Closed += (_, _) => Running = false;
@@ -55,7 +55,7 @@ public class KResourceManager
         VBuffer = new KDrawBuffer
         {
             Buffer = new VertexBuffer(18_000, PrimitiveType.Triangles, VertexBuffer.UsageSpecifier.Dynamic),
-            Regions = 
+            Regions =
             [
                 new KBufferRegion(0, 6_000),      //Each region represents a range of verticies within the VertexBuffer.
                 new KBufferRegion(6_000, 6_000),
@@ -69,7 +69,7 @@ public class KResourceManager
 
         #region Render Layers
 
-        KRenderLayer worldLayer = new(
+        KWorldRenderer worldLayer = new(
             new KCanvas
             {
                 Resolution = (640, 360),
@@ -82,7 +82,7 @@ public class KResourceManager
             ClearColor = new(255, 255, 255, 50),
         };
 
-        KRenderLayer[] renderLayers =
+        KWorldRenderer[] renderLayers =
         [
             worldLayer,
         ];
